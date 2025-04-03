@@ -715,4 +715,32 @@ describe('edit-data-element.vue', () => {
     wrapper.vm.updateElementWhenNoReferElement();
     expect(storeEditedValueSpy).toHaveBeenCalled();
   });
+
+  it('should call onSearch when input changes', async () => {
+    const wrapper = shallowMount(EditGoldenDataElement);
+    const input = wrapper.find('input');
+  
+    await input.setValue('test');
+    
+    expect(wrapper.emitted('onSearch')).toBeTruthy();
+    expect(wrapper.emitted('onSearch')?.[0]).toEqual(['test']);
+  });
+  
+  it('should call onSuggestionSelected when a suggestion is clicked', async () => {
+    const wrapper = shallowMount(EditGoldenDataElement, {
+      data() {
+        return {
+          suggestions: ['00789 | Suggestion1', '00790 | Suggestion2']
+        };
+      }
+    });
+  
+    const suggestion = wrapper.find('.suggestion-item'); // Ensure this matches your actual class
+    await suggestion.trigger('click');
+  
+    expect(wrapper.emitted('onSuggestionSelected')).toBeTruthy();
+    expect(wrapper.emitted('onSuggestionSelected')?.[0]).toEqual(['00789 | Suggestion1']);
+  });
+  
+ 
 });
