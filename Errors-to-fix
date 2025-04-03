@@ -1,68 +1,25 @@
-× should handle onSuggestionSelected correctly (1 ms)                                                                         
-    onSearch                                                                                                                      
-      × should set suggestionList to an empty array if searchKey is empty or too short (5 ms)                                     
-      × should fetch linkage referring elements when searchKey is valid (2 ms)                                                    
-                                                                                                                                  
-  ● edit-data-element.vue › onSearch › should set suggestionList to an empty array if searchKey is empty or too short
-                                                                                                                                  
-    expect(received).toEqual(expected) // deep equality
+it('should set linkageReferringId when a valid suggestion is selected', () => {
+  // Mock selected item
+  const selectedItem = { name: '123 | Test Name' };
 
-    Expected: []
-    Received: undefined
+  // Call function
+  wrapper.vm.onSuggestionSelected(selectedItem);
 
-      725 |     await wrapper.vm.onSearch('');
-      726 |     await wrapper.vm.$nextTick();
-    > 727 |     expect(wrapper.vm.suggestionList.value).toEqual([]); 
-          |                                             ^
-      728 |   });
-      729 |
-      730 |   it('should fetch linkage referring elements when searchKey is valid', async () => {
+  // Assertions
+  expect(wrapper.vm.linkageReferringId.value).toBe('123');
+  expect(updateActiveElement).toHaveBeenCalledWith('referring_element_id', '123');
+  expect(autoSave).toHaveBeenCalled();
+});
 
-      at Object.<anonymous> (tests/unit/datasetView/components/gds-sidebar/components/edit-data-element.spec.ts:727:45)
+it('should set linkageReferringId to an empty string when an invalid suggestion is selected', () => {
+  // Mock selected item with no valid ID
+  const selectedItem = { name: ' | Test Name' };
 
-  ● edit-data-element.vue › onSearch › should fetch linkage referring elements when searchKey is valid
+  // Call function
+  wrapper.vm.onSuggestionSelected(selectedItem);
 
-    expect(received).toEqual(expected) // deep equality
-
-    Expected: ["001 | Element One", "002 | Element Two"]
-    Received: undefined
-
-      746 |     await wrapper.vm.$nextTick();
-      747 |
-    > 748 |     expect(wrapper.vm.suggestionList.value).toEqual([
-          |                                             ^
-      749 |       '001 | Element One',
-      750 |       '002 | Element Two',
-      751 |     ]);
-
-      at Object.<anonymous> (tests/unit/datasetView/components/gds-sidebar/components/edit-data-element.spec.ts:748:45)
-
-  ● edit-data-element.vue › should handle onSuggestionSelected correctly
-
-    expect(received).toBe(expected) // Object.is equality
-
-    Expected: "123"
-    Received: undefined
-
-      759 |   wrapper.vm.onSuggestionSelected(selectedItem);
-      760 |   await wrapper.vm.$nextTick();
-    > 761 |   expect(wrapper.vm.linkageReferringId.value).toBe('123');
-          |                                               ^
-      762 |  });
-      763 |
-      764 | });
-
-      at Object.<anonymous> (tests/unit/datasetView/components/gds-sidebar/components/edit-data-element.spec.ts:761:47)
-
-
-=============================== Coverage summary ===============================
-Statements   : 44.41% ( 3766/8479 )
-Branches     : 8.23% ( 286/3475 )
-Functions    : 8.03% ( 189/2353 )
-Lines        : 44.83% ( 3764/8396 )
-================================================================================
-Test Suites: 1 failed, 1 total
-Tests:       3 failed, 20 passed, 23 total
-Snapshots:   0 total
-Time:        158.963 s
-Ran all test suites matching /edit-data-element.spec/i.
+  // Assertions
+  expect(wrapper.vm.linkageReferringId.value).toBe('');
+  expect(updateActiveElement).toHaveBeenCalledWith('referring_element_id', '');
+  expect(autoSave).toHaveBeenCalled();
+});
