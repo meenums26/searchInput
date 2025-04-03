@@ -1,0 +1,119 @@
+Fix the error =>
+ FAIL  tests/unit/datasetView/components/gds-sidebar/components/edit-data-element.spec.ts
+  ● Test suite failed to run
+
+    tests/unit/datasetView/store/search-store/search.store.mock.ts:396:3 - error TS2741: Property 'linkRefferedElements' is missing in type '{ currentGdsSidebar: GdsSidebarType.hidden; activeDataElement: LinkedElement; defaultDataElement: LinkedElement; elementAttributesFiles: LinkedElement[]; ... 14 more ...; noOfFilesLinked: number; }' but required in type 'GdsSidebar'.
+
+    396   gdsSidebar: {
+          ~~~~~~~~~~
+
+      src/modules/datasetView/model/DvModel.ts:156:3
+        156   linkRefferedElements: LinkedElement[];
+              ~~~~~~~~~~~~~~~~~~~~
+        'linkRefferedElements' is declared here.
+      src/modules/datasetView/model/DvModel.ts:43:3
+        43   gdsSidebar: GdsSidebar;
+             ~~~~~~~~~~
+        The expected type comes from property 'gdsSidebar' which is declared here on type 'DataSetViewState'
+
+
+=============================== Coverage summary ===============================
+Statements   : Unknown% ( 0/0 )
+Branches     : Unknown% ( 0/0 )
+Functions    : Unknown% ( 0/0 )
+Lines        : Unknown% ( 0/0 )
+================================================================================
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        275.074 s
+Ran all test suites matching /edit-data-element.spec/i.
+
+Also add test cases for the following part of codes =>
+<LabelWithInfoModal
+        :label-text="$t('gdsSidebar.linkedRefDataElement')"
+        :modal-title="$t('gdsSidebar.linkedRefDataElement')"
+        :modal-html="$t('gdsSidebar.labelInfo.linkedRefDataElementInfo')"
+      />
+      <EmLabelInfo :label="''" class="mb-4 includes-dropdown">
+        <SearchBarComponent
+          :id="'searchLinkedRefDataElement'"
+          :class="{ disabled: isNoReferringFlag }"
+          :pre-selected-search-term="linkageReferringId"
+          :enable-clear-button="true"
+          :enable-suggest-as-you-type="true"
+          :is-loading="isSeacrhLoading"
+          :search-suggestions="suggestionList"
+          :placeholder="$t('gdsSidebar.searchLinkedRefDataElement')"
+          class="searchComponent"
+          @onSearch="onSearch"
+          @onSuggestionSelection="onSuggestionSelected"
+        />
+      </EmLabelInfo>
+      <LabelWithInfoModal
+        :label-text="$t('gdsSidebar.lifeCycle')"
+        :modal-title="$t('gdsSidebar.lifeCycle')"
+        :modal-html="$t('gdsSidebar.labelInfo.lifeCycleInfo')"
+      />
+      <EmLabelInfo
+        :label="''"
+        class="mb-4 includes-dropdown"
+        data-testid="gde-lifecycle-dropdown"
+      >
+        <div class="holder-with-validation-error">
+          <DropDownComponent
+            :dropdown-data="lifeCycleDetails"
+            :enable-search-field="false"
+            :class="{
+              'input-warning': v$.gdeLifecycleStatus.required.$invalid
+            }"
+            @onOptionSelected="dataElementOptionChanged($event, 'lifecycle')"
+          />
+
+          <div
+            v-if="v$.gdeLifecycleStatus.required.$invalid"
+            class="validation-warning"
+          >
+            <img
+              src="../../../assets/icons/sy-notification-warning-16-filled.svg"
+              alt="Warning"
+              class="warning-icon-margin-right"
+            />
+            {{ $t('gdsSidebar.validationErrors.gdeLifeCycleEmpty') }}
+          </div>
+        </div>
+      </EmLabelInfo>
+
+const onSearch = async (searchKey: string): Promise<void> => {
+  if (!searchKey || searchKey.length < 2) {
+    suggestionList.value = [];
+    return;
+  }
+  try {
+    isSeacrhLoading.value = true;
+    await GdsSidebarStorage.fetchLinkageRefferingElements(searchKey);
+    const response = GdsSidebarStorage.getLinkageReferringElements();
+
+    suggestionList.value = response.map(
+      (item: any) => `${item.data_element_id} | ${item.data_element_name}`
+    );
+  } catch (error) {
+    console.error('Search failed:', error);
+    suggestionList.value = [];
+  } finally {
+    isSeacrhLoading.value = false;
+  }
+};
+
+const onSuggestionSelected = (selectedItem: any) => {
+  const id = selectedItem?.name?.slice(0, selectedItem?.name?.indexOf(' '));
+
+  if (id) {
+    linkageReferringId.value = id;
+    updateActiveElement('referring_element_id', linkageReferringId.value);
+    autoSave();
+  } else {
+    updateActiveElement('reffering_element_id', '');
+    autoSave();
+  }
+};
