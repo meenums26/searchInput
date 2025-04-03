@@ -1,119 +1,65 @@
-Fix the error =>
- FAIL  tests/unit/datasetView/components/gds-sidebar/components/edit-data-element.spec.ts
-  ● Test suite failed to run
+// Add these tests to edit-data-element.spec.ts
 
-    tests/unit/datasetView/store/search-store/search.store.mock.ts:396:3 - error TS2741: Property 'linkRefferedElements' is missing in type '{ currentGdsSidebar: GdsSidebarType.hidden; activeDataElement: LinkedElement; defaultDataElement: LinkedElement; elementAttributesFiles: LinkedElement[]; ... 14 more ...; noOfFilesLinked: number; }' but required in type 'GdsSidebar'.
+describe('SearchBarComponent and Lifecycle Dropdown', () => {
+  it('onSearch updates suggestionList correctly', async () => {
+    const mockResponse = [
+      { data_element_id: 1, data_element_name: 'Test Element' }
+    ];
+    jest.spyOn(GdsSidebarStorage, 'fetchLinkageRefferingElements').mockResolvedValue(mockResponse);
+    jest.spyOn(GdsSidebarStorage, 'getLinkageReferringElements').mockReturnValue(mockResponse);
 
-    396   gdsSidebar: {
-          ~~~~~~~~~~
+    wrapper = createWrapper();
+    await wrapper.vm.onSearch('test');
 
-      src/modules/datasetView/model/DvModel.ts:156:3
-        156   linkRefferedElements: LinkedElement[];
-              ~~~~~~~~~~~~~~~~~~~~
-        'linkRefferedElements' is declared here.
-      src/modules/datasetView/model/DvModel.ts:43:3
-        43   gdsSidebar: GdsSidebar;
-             ~~~~~~~~~~
-        The expected type comes from property 'gdsSidebar' which is declared here on type 'DataSetViewState'
+    expect(wrapper.vm.suggestionList).toEqual(['1 | Test Element']);
+    expect(wrapper.vm.isSeacrhLoading).toBe(false);
+  });
 
+  it('onSuggestionSelected updates linkageReferringId and triggers save', async () => {
+    const saveSpy = jest.spyOn(wrapper.vm, 'autoSave');
+    wrapper = createWrapper();
+    
+    await wrapper.vm.onSuggestionSelected({ name: '123 | Test Element' });
+    
+    expect(wrapper.vm.linkageReferringId).toBe('123');
+    expect(saveSpy).toHaveBeenCalled();
+  });
 
-=============================== Coverage summary ===============================
-Statements   : Unknown% ( 0/0 )
-Branches     : Unknown% ( 0/0 )
-Functions    : Unknown% ( 0/0 )
-Lines        : Unknown% ( 0/0 )
-================================================================================
-Test Suites: 1 failed, 1 total
-Tests:       0 total
-Snapshots:   0 total
-Time:        275.074 s
-Ran all test suites matching /edit-data-element.spec/i.
+  it('lifecycle dropdown selection calls dataElementOptionChanged', async () => {
+    const optionChangedSpy = jest.spyOn(wrapper.vm, 'dataElementOptionChanged');
+    const lifecycleEvent = { value: GdeLifecycleStatus.InUse };
+    
+    wrapper = createWrapper();
+    await wrapper.vm.dataElementOptionChanged(lifecycleEvent, 'lifecycle');
+    
+    expect(optionChangedSpy).toHaveBeenCalledWith(lifecycleEvent, 'lifecycle');
+    expect(wrapper.vm.gdeLifecycleStatus).toBe(GdeLifecycleStatus.InUse);
+  });
 
-Also add test cases for the following part of codes =>
-<LabelWithInfoModal
-        :label-text="$t('gdsSidebar.linkedRefDataElement')"
-        :modal-title="$t('gdsSidebar.linkedRefDataElement')"
-        :modal-html="$t('gdsSidebar.labelInfo.linkedRefDataElementInfo')"
-      />
-      <EmLabelInfo :label="''" class="mb-4 includes-dropdown">
-        <SearchBarComponent
-          :id="'searchLinkedRefDataElement'"
-          :class="{ disabled: isNoReferringFlag }"
-          :pre-selected-search-term="linkageReferringId"
-          :enable-clear-button="true"
-          :enable-suggest-as-you-type="true"
-          :is-loading="isSeacrhLoading"
-          :search-suggestions="suggestionList"
-          :placeholder="$t('gdsSidebar.searchLinkedRefDataElement')"
-          class="searchComponent"
-          @onSearch="onSearch"
-          @onSuggestionSelection="onSuggestionSelected"
-        />
-      </EmLabelInfo>
-      <LabelWithInfoModal
-        :label-text="$t('gdsSidebar.lifeCycle')"
-        :modal-title="$t('gdsSidebar.lifeCycle')"
-        :modal-html="$t('gdsSidebar.labelInfo.lifeCycleInfo')"
-      />
-      <EmLabelInfo
-        :label="''"
-        class="mb-4 includes-dropdown"
-        data-testid="gde-lifecycle-dropdown"
-      >
-        <div class="holder-with-validation-error">
-          <DropDownComponent
-            :dropdown-data="lifeCycleDetails"
-            :enable-search-field="false"
-            :class="{
-              'input-warning': v$.gdeLifecycleStatus.required.$invalid
-            }"
-            @onOptionSelected="dataElementOptionChanged($event, 'lifecycle')"
-          />
+  it('shows validation error when lifecycle is invalid', async () => {
+    (useVuelidate as jest.Mock).mockReturnValue({
+      value: {
+        gdeLifecycleStatus: { required: { $invalid: true } },
+        // ... other validation properties
+      }
+    });
+    
+    wrapper = createWrapper();
+    const validationError = wrapper.find('.validation-warning');
+    
+    expect(validationError.exists()).toBe(true);
+    expect(validationError.text()).toContain('gdsSidebar.validationErrors.gdeLifeCycleEmpty');
+  });
+});
 
-          <div
-            v-if="v$.gdeLifecycleStatus.required.$invalid"
-            class="validation-warning"
-          >
-            <img
-              src="../../../assets/icons/sy-notification-warning-16-filled.svg"
-              alt="Warning"
-              class="warning-icon-margin-right"
-            />
-            {{ $t('gdsSidebar.validationErrors.gdeLifeCycleEmpty') }}
-          </div>
-        </div>
-      </EmLabelInfo>
+it('search component is disabled when isNoReferringFlag is true', async () => {
+  jest.spyOn(GdsSidebarStorage, 'getActiveGoldenDataElement').mockReturnValue({
+    ...mockLinkedElement,
+    referring_element_indicator: 'No'
+  });
 
-const onSearch = async (searchKey: string): Promise<void> => {
-  if (!searchKey || searchKey.length < 2) {
-    suggestionList.value = [];
-    return;
-  }
-  try {
-    isSeacrhLoading.value = true;
-    await GdsSidebarStorage.fetchLinkageRefferingElements(searchKey);
-    const response = GdsSidebarStorage.getLinkageReferringElements();
-
-    suggestionList.value = response.map(
-      (item: any) => `${item.data_element_id} | ${item.data_element_name}`
-    );
-  } catch (error) {
-    console.error('Search failed:', error);
-    suggestionList.value = [];
-  } finally {
-    isSeacrhLoading.value = false;
-  }
-};
-
-const onSuggestionSelected = (selectedItem: any) => {
-  const id = selectedItem?.name?.slice(0, selectedItem?.name?.indexOf(' '));
-
-  if (id) {
-    linkageReferringId.value = id;
-    updateActiveElement('referring_element_id', linkageReferringId.value);
-    autoSave();
-  } else {
-    updateActiveElement('reffering_element_id', '');
-    autoSave();
-  }
-};
+  wrapper = createWrapper();
+  const searchComponent = wrapper.findComponent(SearchBarComponent);
+  
+  expect(searchComponent.props('class')).toMatchObject({ disabled: true });
+});
