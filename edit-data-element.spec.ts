@@ -11,6 +11,7 @@ import useVuelidate from '@vuelidate/core';
 import i18nMod from 'vue-i18n';
 import Utils from '@/common/utilities';
 import { gdsEditWorkflowUtil } from '@/datasetView/utilities/gdsEditWorkflow.utils';
+import { reactive } from 'vue';
 
 let wrapper: any = null;
 
@@ -715,31 +716,34 @@ describe('edit-data-element.vue', () => {
     wrapper.vm.updateElementWhenNoReferElement();
     expect(storeEditedValueSpy).toHaveBeenCalled();
   });
-  it('should handle onSuggestionSelected correctly', () => {
-    const selectedItem = { name: '123 | Test Name' };
-    wrapper.vm.onSuggestionSelected(selectedItem); 
-    expect(wrapper.vm.linkageReferringId.value).toBe('123');
-   });
 
+ 
 describe('onSearch', () => {
 
   it('should set suggestionList to an empty array if searchKey is empty or too short', async () => {
+    wrapper.vm.suggestionList = reactive({value: []});
     await wrapper.vm.onSearch(''); 
+    await wrapper.vm.$nextTick();
     expect(wrapper.vm.suggestionList.value).toEqual([]); 
   });
 
   it('should fetch linkage referring elements when searchKey is valid', async () => {
+    wrapper.vm.suggestionList = reactive({value: []});
+
+    
     const mockResponse = [
       { data_element_id: '001', data_element_name: 'Element One' },
       { data_element_id: '002', data_element_name: 'Element Two' },
     ];
-
-    wrapper.vm.GdsSidebarStorage = {
-      fetchLinkageReferringElements: jest.fn().mockResolvedValue(mockResponse),
-      getLinkageReferringElements: jest.fn().mockReturnValue(mockResponse),
-    };
+    jest.spyOn(GdsSidebarStorage, 'fetchLinkageRefferingElements').mockResolvedValue(undefined);
+    jest.spyOn(GdsSidebarStorage, 'getLinkageReferringElements').mockReturnValue(mockResponse);
+    // wrapper.vm.GdsSidebarStorage = {
+    //   fetchLinkageReferringElements: jest.fn().mockResolvedValue(mockResponse),
+    //   getLinkageReferringElements: jest.fn().mockReturnValue(mockResponse),
+    // };
 
     await wrapper.vm.onSearch('test');
+    await wrapper.vm.$nextTick();
 
     expect(wrapper.vm.suggestionList.value).toEqual([
       '001 | Element One',
@@ -748,4 +752,13 @@ describe('onSearch', () => {
   });
 
 });
+
+it('should handle onSuggestionSelected correctly',async () => {
+  wrapper.vm.linkageReferringId = reactive({value:''});
+  const selectedItem = { name: '123 | Test Name' };
+  wrapper.vm.onSuggestionSelected(selectedItem); 
+  await wrapper.vm.$nextTick();
+  expect(wrapper.vm.linkageReferringId.value).toBe('123');
+ });
+
 });
