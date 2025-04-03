@@ -1,4 +1,25 @@
-<existing test file contents>describe('onSearch', () => { it('should trigger onSearch when input changes', async () => { const wrapper = mount(EditDataElement); const input = wrapper.find('input'); await input.setValue('test search'); expect(wrapper.emitted('onSearch')).toBeTruthy(); expect(wrapper.emitted('onSearch')?.[0]).toEqual(['test search']); }); });
+it('should call onSearch when input changes', async () => {
+  const wrapper = shallowMount(EditDataElement);
+  const input = wrapper.find('input');
 
-describe('onSuggestionSelected', () => { it('should trigger onSuggestionSelected when a suggestion is clicked', async () => { const wrapper = mount(EditDataElement, { data() { return { suggestions: ['Suggestion 1', 'Suggestion 2'] }; } }); const suggestion = wrapper.find('.suggestion-item'); await suggestion.trigger('click'); expect(wrapper.emitted('onSuggestionSelected')).toBeTruthy(); expect(wrapper.emitted('onSuggestionSelected')?.[0]).toEqual(['Suggestion 1']); }); });
+  await input.setValue('test query');
+  
+  expect(wrapper.emitted('onSearch')).toBeTruthy();
+  expect(wrapper.emitted('onSearch')?.[0]).toEqual(['test query']);
+});
 
+it('should call onSuggestionSelected when a suggestion is clicked', async () => {
+  const wrapper = shallowMount(EditDataElement, {
+    data() {
+      return {
+        suggestions: ['Suggestion 1', 'Suggestion 2']
+      };
+    }
+  });
+
+  const suggestion = wrapper.find('.suggestion-item'); // Ensure this matches your actual class
+  await suggestion.trigger('click');
+
+  expect(wrapper.emitted('onSuggestionSelected')).toBeTruthy();
+  expect(wrapper.emitted('onSuggestionSelected')?.[0]).toEqual(['Suggestion 1']);
+});
