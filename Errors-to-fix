@@ -1,68 +1,24 @@
-it('should set linkageReferringId when a valid suggestion is selected', () => {
-  // Mock selected item
-  const selectedItem = { name: '123 | Test Name' };
+import { actions } from '@/store/modules/search.store.actions'; import { datasetViewFactory } from '@/api/datasetViewFactory'; import { types } from '@/store/mutation-types';
 
-  // Call function
-  wrapper.vm.onSuggestionSelected(selectedItem);
+jest.mock('@/api/datasetViewFactory', () => ({ getLinkedRefferingElement: jest.fn(), }));
 
-  // Assertions
-  expect(wrapper.vm.linkageReferringId.value).toBe('123');
-  expect(updateActiveElement).toHaveBeenCalledWith('referring_element_id', '123');
-  expect(autoSave).toHaveBeenCalled();
+describe('FETCH_LINKAGE_REFFERING_ELEMENTS_DATA Action', () => { let commit;
+
+beforeEach(() => { commit = jest.fn(); });
+
+it('should commit SET_LINKAGE_REFFERING_ELEMENTS with data on success', async () => { const mockData = { results: [{ id: 1, name: 'Element 1' }] }; datasetViewFactory.getLinkedRefferingElement.mockResolvedValue({ data: mockData });
+
+await actions[types.FETCH_LINKAGE_REFFERING_ELEMENTS_DATA]({ commit }, 'test-key');
+
+expect(commit).toHaveBeenCalledWith(types.SET_LINKAGE_REFFERING_ELEMENTS, mockData.results);
+
 });
 
-it('should set linkageReferringId to an empty string when an invalid suggestion is selected', () => {
-  // Mock selected item with no valid ID
-  const selectedItem = { name: ' | Test Name' };
+it('should commit MUTATE_LINKAGE_REFFERING_ELEMENTS with an empty array on error', async () => { datasetViewFactory.getLinkedRefferingElement.mockRejectedValue(new Error('API Error'));
 
-  // Call function
-  wrapper.vm.onSuggestionSelected(selectedItem);
+await actions[types.FETCH_LINKAGE_REFFERING_ELEMENTS_DATA]({ commit }, 'test-key');
 
-  // Assertions
-  expect(wrapper.vm.linkageReferringId.value).toBe('');
-  expect(updateActiveElement).toHaveBeenCalledWith('referring_element_id', '');
-  expect(autoSave).toHaveBeenCalled();
-});
+expect(commit).toHaveBeenCalledWith(types.MUTATE_LINKAGE_REFFERING_ELEMENTS, []);
 
-import { shallowMount } from '@vue/test-utils';
-import GdsSidebarStorage from '@/modules/datasetView/components/gds-sidebar.storage';
-import types from '@/store/types';
+}); });
 
-describe('fetchLinkageReferringElements', () => {
-  let storeMock: any;
-
-  beforeEach(() => {
-    storeMock = {
-      dispatch: jest.fn(),
-      commit: jest.fn(),
-    };
-    jest.spyOn(console, 'error').mockImplementation(() => {}); // Mock console.error to avoid logging in test output
-  });
-
-  it('should dispatch FETCH_LINKAGE_REFERRING_ELEMENTS_DATA action with searchKey', async () => {
-    // Arrange
-    const searchKey = 'testKey';
-    storeMock.dispatch.mockResolvedValueOnce(undefined); // Mock store dispatch
-
-    // Act
-    await GdsSidebarStorage.fetchLinkageReferringElements.call({ store: () => storeMock }, searchKey);
-
-    // Assert
-    expect(storeMock.dispatch).toHaveBeenCalledWith(types.FETCH_LINKAGE_REFERRING_ELEMENTS_DATA, searchKey);
-  });
-
-  it('should log an error and call mutateLinkageReferringElements with an empty array on failure', async () => {
-    // Arrange
-    const searchKey = 'testKey';
-    const error = new Error('Failed to fetch');
-    storeMock.dispatch.mockRejectedValueOnce(error);
-    const mutateSpy = jest.spyOn(GdsSidebarStorage, 'mutateLinkageReferringElements');
-
-    // Act
-    await GdsSidebarStorage.fetchLinkageReferringElements.call({ store: () => storeMock }, searchKey);
-
-    // Assert
-    expect(console.error).toHaveBeenCalledWith('Failed to fetch linkage elements:', error);
-    expect(mutateSpy).toHaveBeenCalledWith([]);
-  });
-});
