@@ -1,6 +1,67 @@
-<fully corrected test file with proper mocking of isAdded and Utils.debounce>jest.mock('@/utils', () => ({ debounce: jest.fn((fn) => fn) }));
+● edit-data-element.vue › should handle onSuggestionSelected correctly                                                          
+                                                                                                                                  
+    expect(received).toBe(expected) // Object.is equality
 
-describe('onSearch', () => { it('should call onSearch when input changes', async () => { const wrapper = shallowMount(EditDataElement, { global: { mocks: { $setup: { isAdded: jest.fn(() => true) } } } }); const input = wrapper.find('input'); await input.setValue('test query'); expect(wrapper.emitted('onSearch')).toBeTruthy(); expect(wrapper.emitted('onSearch')?.[0]).toEqual(['test query']); }); });
+    Expected: "123"
+    Received: undefined
 
-describe('onSuggestionSelected', () => { it('should call onSuggestionSelected when a suggestion is clicked', async () => { const wrapper = shallowMount(EditDataElement, { global: { mocks: { $setup: { isAdded: jest.fn(() => true) } } }, data() { return { suggestions: ['Suggestion 1', 'Suggestion 2'] }; } }); const suggestion = wrapper.find('.suggestion-item'); await suggestion.trigger('click'); expect(wrapper.emitted('onSuggestionSelected')).toBeTruthy(); expect(wrapper.emitted('onSuggestionSelected')?.[0]).toEqual(['Suggestion 1']); }); });
+      719 |     const selectedItem = { name: '123 | Test Name' };
+      720 |     wrapper.vm.onSuggestionSelected(selectedItem); 
+    > 721 |     expect(wrapper.vm.linkageReferringId.value).toBe('123');
+          |                                                 ^
+      722 |    });
+      723 |
+      724 | describe('onSearch', () => {
 
+      at Object.<anonymous> (tests/unit/datasetView/components/gds-sidebar/components/edit-data-element.spec.ts:721:49)
+      at TestScheduler.scheduleTests (node_modules/@jest/core/build/TestScheduler.js:333:13)
+      at runJest (node_modules/@jest/core/build/runJest.js:404:19)
+      at _run10000 (node_modules/@jest/core/build/cli/index.js:320:7)
+      at runCLI (node_modules/@jest/core/build/cli/index.js:173:3)
+
+  ● edit-data-element.vue › onSearch › should set suggestionList to an empty array if searchKey is empty or too short
+
+    expect(received).toEqual(expected) // deep equality
+
+    Expected: []
+    Received: undefined
+
+      726 |   it('should set suggestionList to an empty array if searchKey is empty or too short', async () => {
+      727 |     await wrapper.vm.onSearch(''); 
+    > 728 |     expect(wrapper.vm.suggestionList.value).toEqual([]); 
+          |                                             ^
+      729 |   });
+      730 |
+      731 |   it('should fetch linkage referring elements when searchKey is valid', async () => {
+
+      at Object.<anonymous> (tests/unit/datasetView/components/gds-sidebar/components/edit-data-element.spec.ts:728:45)
+
+  ● edit-data-element.vue › onSearch › should fetch linkage referring elements when searchKey is valid
+
+    expect(received).toEqual(expected) // deep equality
+
+    Expected: ["001 | Element One", "002 | Element Two"]
+    Received: undefined
+
+      742 |     await wrapper.vm.onSearch('test');
+      743 |
+    > 744 |     expect(wrapper.vm.suggestionList.value).toEqual([
+          |                                             ^
+      745 |       '001 | Element One',
+      746 |       '002 | Element Two',
+      747 |     ]);
+
+      at Object.<anonymous> (tests/unit/datasetView/components/gds-sidebar/components/edit-data-element.spec.ts:744:45)
+
+
+=============================== Coverage summary ===============================
+Statements   : 44.46% ( 3769/8476 )
+Branches     : 8.25% ( 287/3475 )
+Functions    : 8.07% ( 190/2352 )
+Lines        : 44.88% ( 3767/8393 )
+================================================================================
+Test Suites: 1 failed, 1 total
+Tests:       3 failed, 20 passed, 23 total
+Snapshots:   0 total
+Time:        59.424 s, estimated 106 s
+Ran all test suites matching /edit-data-element.spec/i.
