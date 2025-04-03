@@ -1,24 +1,37 @@
-import { ActionContext } from 'vuex'; import actions from '@/datasetView/store/search-store/search.store.actions'; import { datasetViewFactory } from '@/datasetView/api/datasetViewFactory'; import { types } from '@/datasetView/store/mutation-types';
+  it('Async [types.FETCH_LINKAGE_REFFERING_ELEMENTS_DATA]: should commit SET_LINKAGE_REFFERING_ELEMENTS on successful API call', async () => {
+    const commitSpy = jest.spyOn(gdsActionContext, 'commit');
+    const searchKey = 'testKey';
 
-jest.mock('@/datasetView/api/datasetViewFactory', () => ({ getLinkedRefferingElement: jest.fn(), }));
+    await actions[FETCH_LINKAGE_REFFERING_ELEMENTS_DATA](
+      gdsActionContext,
+      searchKey
+    );
 
-describe('FETCH_LINKAGE_REFFERING_ELEMENTS_DATA Action', () => { let commit: jest.Mock; let context: ActionContext<any, any>;
+    expect(datasetViewFactory.getLinkedRefferingElement).toHaveBeenCalledWith(searchKey);
+    expect(commitSpy).toHaveBeenCalledWith(
+      SET_LINKAGE_REFFERING_ELEMENTS,
+      mockLinkedRefferingElementsResponse.data.results
+    );
+  });
 
-beforeEach(() => { commit = jest.fn(); context = { commit } as ActionContext<any, any>; });
+  it('Async [types.FETCH_LINKAGE_REFFERING_ELEMENTS_DATA]: should commit MUTATE_LINKAGE_REFFERING_ELEMENTS with empty array on API error', async () => {
+    const commitSpy = jest.spyOn(gdsActionContext, 'commit');
+    const searchKey = 'errorKey';
+    const errorMessage = 'API request failed';
+    jest
+      .spyOn(datasetViewFactory, 'getLinkedRefferingElement')
+      .mockRejectedValue(new Error(errorMessage));
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-it('commits SET_LINKAGE_REFFERING_ELEMENTS on success', async () => { const mockData = { results: [{ id: 1, name: 'Element 1' }] }; datasetViewFactory.getLinkedRefferingElement.mockResolvedValue({ data: mockData });
+    await actions[FETCH_LINKAGE_REFFERING_ELEMENTS_DATA](
+      gdsActionContext,
+      searchKey
+    );
 
-await actions[types.FETCH_LINKAGE_REFFERING_ELEMENTS_DATA](context, 'test-key');
+    expect(datasetViewFactory.getLinkedRefferingElement).toHaveBeenCalledWith(searchKey);
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Fetch error :', new Error(errorMessage));
+    expect(commitSpy).toHaveBeenCalledWith(MUTATE_LINKAGE_REFFERING_ELEMENTS, []);
 
-expect(commit).toHaveBeenCalledWith(types.SET_LINKAGE_REFFERING_ELEMENTS, mockData.results);
-
-});
-
-it('commits MUTATE_LINKAGE_REFFERING_ELEMENTS on failure', async () => { datasetViewFactory.getLinkedRefferingElement.mockRejectedValue(new Error('API Error'));
-
-await actions[types.FETCH_LINKAGE_REFFERING_ELEMENTS_DATA](context, 'test-key');
-
-expect(commit).toHaveBeenCalledWith(types.MUTATE_LINKAGE_REFFERING_ELEMENTS, []);
-
-}); });
+    consoleErrorSpy.mockRestore();
+  });
 
