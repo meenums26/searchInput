@@ -13,7 +13,8 @@ import {
   IBulkDataAccessResponse,
   IEditDataAccessResponse,
   DatasetFilter,
-  FilterSegments
+  FilterSegments,
+  DataProductRequestDetails
 } from '@/datasetView/usecase-v2/tabs/dsa/bulkRequestAccessToGoldenDatasets/shared/models';
 import { WorkFlowServices } from '@/datasetView/workFlow/services/workflow.service';
 import { WorkflowStorage } from '@/datasetView/workFlow/storage';
@@ -33,7 +34,8 @@ import { IdeService } from '@/datasetView/integratedDatasets/services/ide.servic
 import { IdeGdeMapperDetails } from '@/datasetView/integratedDatasets/model';
 import { useStorage } from '@/core/plugin';
 import { ENABLE_DSA_FILTER_SEGMENTS } from '@/common/constants';
-import console = require('console');
+import * as fromUCDsa from '@/datasetView/usecase-v2/tabs/dsa/storage/index';
+import * as fromUCV2Store from '@/datasetView/usecase-v2/storage/store';
 import {
   DataForAutoSuggest,
   DataSearchParams,
@@ -55,8 +57,7 @@ import {
   MappedIde,
   FilterPhysicalAttributesByPhysicalDatasetPayload,
   SegmentsAndConditionsForFilterAndPhysicalAttributePayload,
-  PayloadUpdateFilterSegmentsValuesByFilterAndPhysicalAttributeRoot,
-  LinkedElement
+  PayloadUpdateFilterSegmentsValuesByFilterAndPhysicalAttributeRoot
 } from '../../model/DvModel';
 import {
   DataAPIFetch,
@@ -785,6 +786,32 @@ export default {
     }
   },
 
+  async [types.EDIT_BULK_DATA_ACCESS_TO_INTEGRATED_DATASETS](
+    { state, commit }: ActionContext<DataSetViewState, RootState>,
+    dataProductRequestDetails: DataProductRequestDetails
+  ): Promise<IEditDataAccessResponse | unknown> {
+    const { editedFields } = state.bulkDataAccess;
+    const accessRequestDetails = state.bulkDataAccess.accessRequestPayload;
+    const parsedOperationPayload =
+      SearchStoreMapper.parseEditStateToPayload(editedFields);
+    const payloadToBff = SearchStoreMapper.preparePayloadForDPEdit(
+      dataProductRequestDetails,
+      parsedOperationPayload,
+      accessRequestDetails
+    );
+    try {
+      const requestAccessResponse =
+        await datasetViewFactory.editRequestToDataProductDsa(payloadToBff);
+      commit(
+        `${fromUCV2Store.UCV2_STORE_MODULE}/${fromUCDsa.SET_USE_CASE_DSA_TAB_TILE_INFORMATION}`,
+        fromUCDsa.initialDsaTileTabState
+      );
+      return Promise.resolve(requestAccessResponse);
+    } catch (err) {
+      return Promise.resolve(err);
+    }
+  },
+
   async [types.EDIT_BULK_DATA_ACCESS_TO_GOLDEN_DATASETS](
     { state }: ActionContext<DataSetViewState, RootState>,
     payload: EditPayload
@@ -803,6 +830,45 @@ export default {
       return Promise.resolve(requestAccessResponse);
     } catch (err) {
       return Promise.resolve(err);
+    }
+  },
+  async [types.REQUEST_DP_DSA_DETAILS_BY_STATUS_ID](
+    { commit }: ActionContext<DataSetViewState, RootState>,
+    payload: { usecaseId: string; idsId: string; oarId: string }
+  ): Promise<void> {
+    try {
+      const { data } = await datasetViewFactory.requestDpDsaDetailsByStatusId(
+        payload
+      );
+      if (data?.oar_id) {
+        const { oar_id, start_date, end_date, ide_ids } = data;
+        const dataProductRequestDetails: DataProductRequestDetails = {
+          ...data,
+          ids_id: payload.idsId
+        };
+        const accessPeriod = {
+          start: moment(start_date).format(DEFAULT_DATE_FORMAT),
+          end: moment(end_date).format(DEFAULT_DATE_FORMAT)
+        };
+        commit(types.SET_BULK_DATA_ACCESS_PAYLOAD_CONSUMING_APP, {
+          oarId: oar_id
+        });
+        commit(types.SET_BULK_DATA_ACCESS_PAYLOAD_PERIOD, accessPeriod);
+        commit(types.SET_BULK_DATA_ACCESS_PAYLOAD_IDS_ELEMENTS, {
+          idsId: payload.idsId,
+          allDataElementsSelected: false,
+          dataElements: ide_ids,
+          totalDataElements: ide_ids.length
+        });
+        commit(types.SET_PREVIOUSLY_SELECTED_IDS_DATA_ELEMENTS, ide_ids);
+        commit(types.SET_BULK_DATA_ACCESS_SELECTED_IDS_ELEMENTS, ide_ids);
+        commit(
+          types.SET_DATA_PRODUCT_REQUEST_DETAILS,
+          dataProductRequestDetails
+        );
+      }
+    } catch (err) {
+      console.log(err);
     }
   },
   [types.REQUEST_DSA_DETAILS_BY_MASTERID](
@@ -1204,9 +1270,14 @@ export default {
     { commit }: ActionContext<DataSetViewState, RootState>,
     searchKey: string
   ): Promise<void> {
-    const linkageRefferingElementsData = await datasetViewFactory.getLinkedRefferingElement(searchKey);
-    commit(types.SET_LINKAGE_REFFERING_ELEMENTS),{
-      linkageRefferingElements:linkageRefferingElementsData.results
+    try {
+      const response = await datasetViewFactory.getLinkedRefferingElement(
+        searchKey
+      );
+      commit(types.SET_LINKAGE_REFFERING_ELEMENTS, response.data.results);
+    } catch (error) {
+      console.error('Fetch error :', error);
+      commit(types.MUTATE_LINKAGE_REFFERING_ELEMENTS, []);
     }
   }
 };
