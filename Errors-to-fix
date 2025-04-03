@@ -1,91 +1,59 @@
- edit-data-element.vue › onSearch updates suggestionList correctly                                                             
-                                                                                                                                  
-    TypeError: $setup.isAdded is not a function
+import { shallowMount } from '@vue/test-utils';
+import EditGoldenDataElement from '@/components/edit-data-element.vue';
+import { GdsSidebarStorage } from '@/storage/gds-sidebar.storage';
 
-      1282 |     );
-      1283 |   }
-    > 1284 |   Utils.debounce(async () => {
-           |                          ^
-      1285 |     updateActiveElement(propName, event.value);
-      1286 |     const isNoReferringFlagActiveGdeCheck =
-      1287 |       GdsSidebarStorage.getActiveGoldenDataElement()
+// Mock data
+const mockSearchResults = [
+  { data_element_id: 1, data_element_name: 'Element 1' },
+  { data_element_id: 2, data_element_name: 'Element 2' }
+];
 
-      at Proxy.call (src/modules/datasetView/components/gds-sidebar/components/edit-data-element.vue:1284:26)
-      at renderComponentRoot (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:875:16)
-      at ReactiveEffect.fn (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:5948:46)
-      at ReactiveEffect.run (node_modules/@vue/reactivity/dist/reactivity.cjs.js:181:19)
-      at update (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:6079:16)
-      at setupRenderEffect (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:6089:5)
-      at mountComponent (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:5857:7)
-      at processComponent (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:5811:9)
-      at patch (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:5290:11)
-      at ReactiveEffect.fn (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:5955:11)
-      at ReactiveEffect.run (node_modules/@vue/reactivity/dist/reactivity.cjs.js:181:19)
-      at update (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:6079:16)
-      at setupRenderEffect (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:6089:5)
-      at mountComponent (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:5857:7)
-      at processComponent (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:5811:9)
-      at patch (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:5290:11)
-      at render (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:6600:7)
-      at mount (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:3913:13)
-      at Object.mount (node_modules/@vue/runtime-dom/dist/runtime-dom.cjs.js:1453:19)
-      at mount (node_modules/@vue/test-utils/dist/vue-test-utils.cjs.js:8324:18)
-      at Object.shallowMount (node_modules/@vue/test-utils/dist/vue-test-utils.cjs.js:8342:12)
-      at createWrapper (tests/unit/datasetView/components/gds-sidebar/components/edit-data-element.spec.ts:93:10)
-      at Object.<anonymous> (tests/unit/datasetView/components/gds-sidebar/components/edit-data-element.spec.ts:726:15)
-      at TestScheduler.scheduleTests (node_modules/@jest/core/build/TestScheduler.js:333:13)
-      at runJest (node_modules/@jest/core/build/runJest.js:404:19)
-      at _run10000 (node_modules/@jest/core/build/cli/index.js:320:7)
-      at runCLI (node_modules/@jest/core/build/cli/index.js:173:3)
+describe('edit-data-element.vue', () => {
+  let wrapper: any;
 
-  ● edit-data-element.vue › onSuggestionSelected updates linkageReferringId and triggers save
+  beforeEach(() => {
+    // Mock storage methods
+    jest.spyOn(GdsSidebarStorage, 'fetchLinkageRefferingElements').mockResolvedValue(undefined);
+    jest.spyOn(GdsSidebarStorage, 'getLinkageReferringElements').mockReturnValue(mockSearchResults);
+  });
 
-    TypeError: $setup.isAdded is not a function
+  it('onSearch updates suggestions correctly', async () => {
+    wrapper = shallowMount(EditGoldenDataElement, {
+      props: {
+        goldenDataElement: {
+          data_element_id: 123,
+          change_type: 'EDIT' // Add required property
+        }
+      }
+    });
 
-      1282 |     );
-      1283 |   }
-    > 1284 |   Utils.debounce(async () => {
-           |                          ^
-      1285 |     updateActiveElement(propName, event.value);
-      1286 |     const isNoReferringFlagActiveGdeCheck =
-      1287 |       GdsSidebarStorage.getActiveGoldenDataElement()
+    await wrapper.vm.onSearch('test');
+    
+    expect(wrapper.vm.suggestionList).toEqual([
+      '1 | Element 1',
+      '2 | Element 2'
+    ]);
+    expect(wrapper.vm.isSeacrhLoading).toBe(false);
+  });
 
-      at Proxy.call (src/modules/datasetView/components/gds-sidebar/components/edit-data-element.vue:1284:26)
-      at renderComponentRoot (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:875:16)
-      at ReactiveEffect.fn (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:5948:46)
-      at ReactiveEffect.run (node_modules/@vue/reactivity/dist/reactivity.cjs.js:181:19)
-      at update (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:6079:16)
-      at setupRenderEffect (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:6089:5)
-      at mountComponent (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:5857:7)
-      at processComponent (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:5811:9)
-      at patch (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:5290:11)
-      at ReactiveEffect.fn (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:5955:11)
-      at ReactiveEffect.run (node_modules/@vue/reactivity/dist/reactivity.cjs.js:181:19)
-      at update (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:6079:16)
-      at setupRenderEffect (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:6089:5)
-      at mountComponent (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:5857:7)
-      at processComponent (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:5811:9)
-      at patch (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:5290:11)
-      at render (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:6600:7)
-      at mount (node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:3913:13)
-      at Object.mount (node_modules/@vue/runtime-dom/dist/runtime-dom.cjs.js:1453:19)
-      at mount (node_modules/@vue/test-utils/dist/vue-test-utils.cjs.js:8324:18)
-      at Object.shallowMount (node_modules/@vue/test-utils/dist/vue-test-utils.cjs.js:8342:12)
-      at createWrapper (tests/unit/datasetView/components/gds-sidebar/components/edit-data-element.spec.ts:93:10)
-      at Object.<anonymous> (tests/unit/datasetView/components/gds-sidebar/components/edit-data-element.spec.ts:735:15)
-      at TestScheduler.scheduleTests (node_modules/@jest/core/build/TestScheduler.js:333:13)
-      at runJest (node_modules/@jest/core/build/runJest.js:404:19)
-      at _run10000 (node_modules/@jest/core/build/cli/index.js:320:7)
-      at runCLI (node_modules/@jest/core/build/cli/index.js:173:3)
+  it('onSuggestionSelected updates linkage ID and saves', async () => {
+    wrapper = shallowMount(EditGoldenDataElement, {
+      props: {
+        goldenDataElement: {
+          data_element_id: 123,
+          change_type: 'EDIT'
+        }
+      }
+    });
 
+    // Mock autoSave
+    const autoSaveMock = jest.fn();
+    wrapper.vm.autoSave = autoSaveMock;
 
-=============================== Coverage summary ===============================
-Statements   : 44.15% ( 3743/8476 )
-Branches     : 7.79% ( 271/3475 )
-Functions    : 7.82% ( 184/2352 )
-Lines        : 44.57% ( 3741/8393 )
-================================================================================
-Test Suites: 1 failed, 1 total
-Tests:       2 failed, 20 passed, 22 total
-Snapshots:   0 total
-Time:        130.483 s
+    // Simulate selecting a suggestion
+    await wrapper.vm.onSuggestionSelected({ name: '1 | Element 1' });
+    
+    expect(wrapper.vm.linkageReferringId).toBe('1');
+    expect(autoSaveMock).toHaveBeenCalled();
+  });
+});
