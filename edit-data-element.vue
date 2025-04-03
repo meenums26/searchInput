@@ -623,43 +623,25 @@
         />
       </EmLabelInfo>
       <LabelWithInfoModal
-      :label-text="$t('gdsSidebar.linkedRefDataElement')"
-      :modal-title="$t('gdsSidebar.linkedRefDataElement')"
-      :modal-html="$t('gdsSidebar.labelInfo.linkedRefDataElementInfo')"
+        :label-text="$t('gdsSidebar.linkedRefDataElement')"
+        :modal-title="$t('gdsSidebar.linkedRefDataElement')"
+        :modal-html="$t('gdsSidebar.labelInfo.linkedRefDataElementInfo')"
       />
       <EmLabelInfo :label="''" class="mb-4 includes-dropdown">
-      <SearchBarComponent
-      :id="'searchLinkedRefDataElement'"
-      :class="{ disabled: isNoReferringFlag }"
-      :pre-selected-search-term="linkageReferringId"
-      :enable-clear-button="true"
-      :enable-suggest-as-you-type="true"
-      :is-loading="isSeacrhLoading"
-      :search-suggestions="suggestionList"
-      :placeholder="$t('gdsSidebar.searchLinkedRefDataElement')"
-      class="searchComponent"
-      @onSearch="onSearch"
-      @onSuggestionSelection="onSuggestionSelected"
-      />
-      </EmLabelInfo>
-      <!-- <EmLabelInfo :label="''" class="mb-4 includes-dropdown">
-        <input
-          type="number"
-          class="form-control"
+        <SearchBarComponent
+          :id="'searchLinkedRefDataElement'"
           :class="{ disabled: isNoReferringFlag }"
-          min="0"
-          max="9999999999"
-          :disabled="isNoReferringFlag"
-          oninput="validity.valid||(value='');"
-          :value="linkageReferringId"
-          @input="
-            dataElementInputChanged(
-              $event.target.value,
-              inputNames.linkedReferringId
-            )
-          "
+          :pre-selected-search-term="linkageReferringId"
+          :enable-clear-button="true"
+          :enable-suggest-as-you-type="true"
+          :is-loading="isSeacrhLoading"
+          :search-suggestions="suggestionList"
+          :placeholder="$t('gdsSidebar.searchLinkedRefDataElement')"
+          class="searchComponent"
+          @onSearch="onSearch"
+          @onSuggestionSelection="onSuggestionSelected"
         />
-      </EmLabelInfo> -->
+      </EmLabelInfo>
       <LabelWithInfoModal
         :label-text="$t('gdsSidebar.lifeCycle')"
         :modal-title="$t('gdsSidebar.lifeCycle')"
@@ -812,24 +794,19 @@ import Utils from '@/common/utilities';
 import deepCopy from '@/common/utils/deepCopy';
 import IconSwitch from '@/components/icon-switch.vue';
 import ToggleSwitchSimple from '@/components/toggle-switch-simple.vue';
-import { DropDown } from '@/core/modules/search';
 import DropDownComponent from '@/datasetView/components/shared/DropDownComponent.vue';
 import AutoSaveIndicator from '@/components/auto-save-indicator.vue';
 import {
   Attribute,
   DatasetEditAction,
   DatasetElementEditAnalyticsProperties,
-  DatasetEvent,
   LinkedElement
 } from '@/datasetView/model';
 import { GdsValidationUtil } from '@/datasetView/utilities/gds-validation.util';
 import { gdsEditWorkflowUtil } from '@/datasetView/utilities/gdsEditWorkflow.utils';
 import {
   EmButton,
-  EmIcon,
-  EmInput,
   EmLabelInfo,
-  EmLoader,
   EmGeneralPopover
 } from '@aab/vue-shared-components';
 import SearchBarComponent from '@/datasetView/components/shared/SearchBarComponent.vue';
@@ -893,7 +870,7 @@ const inputNames = {
 /* -------------------------------------Refs---------------------*/
 
 const suggestionList = ref<Array<any>>([]);
- const isSeacrhLoading = ref(false);
+const isSeacrhLoading = ref(false);
 
 const keyDataElement: Ref<DropdownData[]> = ref([
   {
@@ -1130,23 +1107,19 @@ const enableGDEDataRetention = computed(() =>
   storage.features.hasFeature(ENABLE_GDE_DATA_RETENTION)
 );
 
-const onSearch = async (searchKey: string):Promise<void> => {
+const onSearch = async (searchKey: string): Promise<void> => {
   if (!searchKey || searchKey.length < 2) {
     suggestionList.value = [];
     return;
   }
-   console.log("search key :",searchKey)
   try {
     isSeacrhLoading.value = true;
-    // Call your API to search for golden datasets
-    const response = GdsSidebarStorage.fetchLinkageRefferingElements(searchKey);
-    console.log("response :",response)
-    if(response && Array.isArray(response)){
-      suggestionList.value = response.map((item: any) => ({
-      id: item.data_element_id,
-      name: item.data_element_name
-    }));
-    }    
+    await GdsSidebarStorage.fetchLinkageRefferingElements(searchKey);
+    const response = GdsSidebarStorage.getLinkageReferringElements();
+
+    suggestionList.value = response.map(
+      (item: any) => `${item.data_element_id} | ${item.data_element_name}`
+    );
   } catch (error) {
     console.error('Search failed:', error);
     suggestionList.value = [];
@@ -1156,9 +1129,16 @@ const onSearch = async (searchKey: string):Promise<void> => {
 };
 
 const onSuggestionSelected = (selectedItem: any) => {
-  linkageReferringId.value = selectedItem.id.toString();
-  updateActiveElement('referring_element_id', linkageReferringId.value);
-  autoSave();
+  const id = selectedItem?.name?.slice(0, selectedItem?.name?.indexOf(' '));
+
+  if (id) {
+    linkageReferringId.value = id;
+    updateActiveElement('referring_element_id', linkageReferringId.value);
+    autoSave();
+  } else {
+    updateActiveElement('reffering_element_id', '');
+    autoSave();
+  }
 };
 
 /** -------------------------------------Functions---------------------*/
@@ -1823,5 +1803,8 @@ $footer_height: 4.4rem;
       display: block;
     }
   }
+}
+.suggestion-box .suggestion-item {
+  text-align: left;
 }
 </style>
