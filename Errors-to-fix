@@ -1,12 +1,12 @@
-import { DataSetViewState, RootState } from '@/datasetView/model'; import { ActionContext } from 'vuex'; import actions from '@/datasetView/store/search-store/search.store.actions'; import { datasetViewFactory } from '@/datasetView/api/datasetViewFactory'; import { types } from '@/datasetView/store/mutation-types';
+import { ActionContext } from 'vuex'; import actions from '@/datasetView/store/search-store/search.store.actions'; import { datasetViewFactory } from '@/datasetView/api/datasetViewFactory'; import { types } from '@/datasetView/store/mutation-types';
 
 jest.mock('@/datasetView/api/datasetViewFactory', () => ({ getLinkedRefferingElement: jest.fn(), }));
 
-describe('FETCH_LINKAGE_REFFERING_ELEMENTS_DATA Action', () => { let commit: jest.Mock; let state: DataSetViewState; let rootState: RootState; let context: ActionContext<DataSetViewState, RootState>;
+describe('FETCH_LINKAGE_REFFERING_ELEMENTS_DATA Action', () => { let commit: jest.Mock; let context: ActionContext<any, any>;
 
-beforeEach(() => { commit = jest.fn(); state = {} as DataSetViewState; rootState = {} as RootState; context = { commit, state, rootState } as ActionContext<DataSetViewState, RootState>; });
+beforeEach(() => { commit = jest.fn(); context = { commit } as ActionContext<any, any>; });
 
-it('should commit SET_LINKAGE_REFFERING_ELEMENTS with data on success', async () => { const mockData = { results: [{ id: 1, name: 'Element 1' }] }; datasetViewFactory.getLinkedRefferingElement.mockResolvedValue({ data: mockData });
+it('commits SET_LINKAGE_REFFERING_ELEMENTS on success', async () => { const mockData = { results: [{ id: 1, name: 'Element 1' }] }; datasetViewFactory.getLinkedRefferingElement.mockResolvedValue({ data: mockData });
 
 await actions[types.FETCH_LINKAGE_REFFERING_ELEMENTS_DATA](context, 'test-key');
 
@@ -14,7 +14,7 @@ expect(commit).toHaveBeenCalledWith(types.SET_LINKAGE_REFFERING_ELEMENTS, mockDa
 
 });
 
-it('should commit MUTATE_LINKAGE_REFFERING_ELEMENTS with an empty array on error', async () => { datasetViewFactory.getLinkedRefferingElement.mockRejectedValue(new Error('API Error'));
+it('commits MUTATE_LINKAGE_REFFERING_ELEMENTS on failure', async () => { datasetViewFactory.getLinkedRefferingElement.mockRejectedValue(new Error('API Error'));
 
 await actions[types.FETCH_LINKAGE_REFFERING_ELEMENTS_DATA](context, 'test-key');
 
