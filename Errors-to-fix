@@ -1,40 +1,24 @@
-● edit-data-element.vue › should handle onSuggestionSelected correctly                                                          
+× should handle onSuggestionSelected correctly (1 ms)                                                                         
+    onSearch                                                                                                                      
+      × should set suggestionList to an empty array if searchKey is empty or too short (5 ms)                                     
+      × should fetch linkage referring elements when searchKey is valid (2 ms)                                                    
                                                                                                                                   
-    expect(received).toBe(expected) // Object.is equality
-
-    Expected: "123"
-    Received: undefined
-
-      719 |     const selectedItem = { name: '123 | Test Name' };
-      720 |     wrapper.vm.onSuggestionSelected(selectedItem); 
-    > 721 |     expect(wrapper.vm.linkageReferringId.value).toBe('123');
-          |                                                 ^
-      722 |    });
-      723 |
-      724 | describe('onSearch', () => {
-
-      at Object.<anonymous> (tests/unit/datasetView/components/gds-sidebar/components/edit-data-element.spec.ts:721:49)
-      at TestScheduler.scheduleTests (node_modules/@jest/core/build/TestScheduler.js:333:13)
-      at runJest (node_modules/@jest/core/build/runJest.js:404:19)
-      at _run10000 (node_modules/@jest/core/build/cli/index.js:320:7)
-      at runCLI (node_modules/@jest/core/build/cli/index.js:173:3)
-
   ● edit-data-element.vue › onSearch › should set suggestionList to an empty array if searchKey is empty or too short
-
+                                                                                                                                  
     expect(received).toEqual(expected) // deep equality
 
     Expected: []
     Received: undefined
 
-      726 |   it('should set suggestionList to an empty array if searchKey is empty or too short', async () => {
-      727 |     await wrapper.vm.onSearch(''); 
-    > 728 |     expect(wrapper.vm.suggestionList.value).toEqual([]); 
+      725 |     await wrapper.vm.onSearch('');
+      726 |     await wrapper.vm.$nextTick();
+    > 727 |     expect(wrapper.vm.suggestionList.value).toEqual([]); 
           |                                             ^
-      729 |   });
-      730 |
-      731 |   it('should fetch linkage referring elements when searchKey is valid', async () => {
+      728 |   });
+      729 |
+      730 |   it('should fetch linkage referring elements when searchKey is valid', async () => {
 
-      at Object.<anonymous> (tests/unit/datasetView/components/gds-sidebar/components/edit-data-element.spec.ts:728:45)
+      at Object.<anonymous> (tests/unit/datasetView/components/gds-sidebar/components/edit-data-element.spec.ts:727:45)
 
   ● edit-data-element.vue › onSearch › should fetch linkage referring elements when searchKey is valid
 
@@ -43,25 +27,42 @@
     Expected: ["001 | Element One", "002 | Element Two"]
     Received: undefined
 
-      742 |     await wrapper.vm.onSearch('test');
-      743 |
-    > 744 |     expect(wrapper.vm.suggestionList.value).toEqual([
+      746 |     await wrapper.vm.$nextTick();
+      747 |
+    > 748 |     expect(wrapper.vm.suggestionList.value).toEqual([
           |                                             ^
-      745 |       '001 | Element One',
-      746 |       '002 | Element Two',
-      747 |     ]);
+      749 |       '001 | Element One',
+      750 |       '002 | Element Two',
+      751 |     ]);
 
-      at Object.<anonymous> (tests/unit/datasetView/components/gds-sidebar/components/edit-data-element.spec.ts:744:45)
+      at Object.<anonymous> (tests/unit/datasetView/components/gds-sidebar/components/edit-data-element.spec.ts:748:45)
+
+  ● edit-data-element.vue › should handle onSuggestionSelected correctly
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "123"
+    Received: undefined
+
+      759 |   wrapper.vm.onSuggestionSelected(selectedItem);
+      760 |   await wrapper.vm.$nextTick();
+    > 761 |   expect(wrapper.vm.linkageReferringId.value).toBe('123');
+          |                                               ^
+      762 |  });
+      763 |
+      764 | });
+
+      at Object.<anonymous> (tests/unit/datasetView/components/gds-sidebar/components/edit-data-element.spec.ts:761:47)
 
 
 =============================== Coverage summary ===============================
-Statements   : 44.46% ( 3769/8476 )
-Branches     : 8.25% ( 287/3475 )
-Functions    : 8.07% ( 190/2352 )
-Lines        : 44.88% ( 3767/8393 )
+Statements   : 44.41% ( 3766/8479 )
+Branches     : 8.23% ( 286/3475 )
+Functions    : 8.03% ( 189/2353 )
+Lines        : 44.83% ( 3764/8396 )
 ================================================================================
 Test Suites: 1 failed, 1 total
 Tests:       3 failed, 20 passed, 23 total
 Snapshots:   0 total
-Time:        59.424 s, estimated 106 s
+Time:        158.963 s
 Ran all test suites matching /edit-data-element.spec/i.
